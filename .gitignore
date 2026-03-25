@@ -1,3 +1,17 @@
+# Security & Credentials
 .env
-temp_raw/
+
+# Massive Data Payloads
 *.zip
+*.mp4
+*.jpg
+
+# SageMaker Pipeline Specifics
+ffpp_temp/
+ffpp_download.py
+ffpp_*_manifest.txt
+
+# Jupyter & Python Garbage
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
