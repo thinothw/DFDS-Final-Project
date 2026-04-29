@@ -1,20 +1,7 @@
-# Security & Credentials
-.env
-GDRIVE_API_KEY*
-
-# Massive Data Payloads
-*.zip
-*.mp4
-*.jpg
-*.jpeg
-df40_cdf_stage/
-raw_reals/
-raw_fakes/
-logs/
-
-# SageMaker / Jupyter Garbage
-.ipynb_checkpoints/
+venv/
 __pycache__/
-.DS_Store
-__MACOSX/
-._*
+*.pyc
+*.pth
+temp_uploads/
+*.dylib
+*.so
