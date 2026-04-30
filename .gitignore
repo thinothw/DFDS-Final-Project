@@ -1,17 +1,20 @@
 # Security & Credentials
 .env
+GDRIVE_API_KEY*
 
 # Massive Data Payloads
 *.zip
 *.mp4
 *.jpg
+*.jpeg
+df40_cdf_stage/
+raw_reals/
+raw_fakes/
+logs/
 
-# SageMaker Pipeline Specifics
-ffpp_temp/
-ffpp_download.py
-ffpp_*_manifest.txt
-
-# Jupyter & Python Garbage
+# SageMaker / Jupyter Garbage
 .ipynb_checkpoints/
 __pycache__/
-*.pyc
+.DS_Store
+__MACOSX/
+._*
