@@ -1,0 +1,55 @@
+/* ─── GlassCard ─────────────────────────────────────────────── */
+/* Pseudo-elements for the top-edge highlight and ambient glow   */
+/* are handled here because Tailwind cannot generate ::before /  */
+/* ::after rules with arbitrary gradient values.                 */
+
+.glass-card {
+  background: linear-gradient(
+    160deg,
+    rgba(30, 50, 65, 0.92)  0%,
+    rgba(17, 33, 45, 0.85) 100%
+  );
+  border-radius: 14px;
+  border-top:    0.5px solid rgba(255, 255, 255, 0.18);
+  border-left:   0.5px solid rgba(255, 255, 255, 0.07);
+  border-right:  0.5px solid rgba(0,   0,   0,   0.30);
+  border-bottom: 0.5px solid rgba(0,   0,   0,   0.35);
+  padding: 28px 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.06) inset;
+}
+
+/* Horizontal shimmer line along the top edge */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.13) 40%,
+    rgba(255, 255, 255, 0.06) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Soft ambient glow in the top-left quadrant */
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 60%;
+  background: radial-gradient(
+    ellipse at top left,
+    rgba(156, 186, 171, 0.045),
+    transparent 65%
+  );
+  pointer-events: none;
+}

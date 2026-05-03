@@ -1,0 +1,67 @@
+/* Inter from Google Fonts — weights 300, 400, 500 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design tokens ─────────────────────────────────────────── */
+:root {
+  --color-bg:           #06141B;
+  --color-card:         linear-gradient(160deg, rgba(30,50,65,0.75), rgba(17,33,45,0.6));
+  --color-text-primary: #9BA8AB;
+  --color-text-muted:   #4A5C6A;
+  --color-navy:         #253745;
+  --color-fake-dark:    #A32D2D;
+  --color-fake-light:   #F09595;
+  --color-real-dark:    #0F6E56;
+  --color-real-light:   #5DCAA5;
+  --color-variance:     #D4A030;
+}
+
+/* ─── Base reset ────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Spinner (UploadPanel inference state) ─────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid rgba(74, 92, 106, 0.25);
+  border-top-color: #4A5C6A;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ─── Progress bar fill animation ───────────────────────────── */
+/* Eases to ~85% and holds. Rerenders fresh each load because    */
+/* the containing element mounts only while imageLoading is true.*/
+@keyframes progress-fill {
+  0%   { width: 0% }
+  25%  { width: 38% }
+  55%  { width: 65% }
+  80%  { width: 79% }
+  100% { width: 85% }
+}
+
+.progress-loading {
+  height: 100%;
+  background: #253745;
+  border-radius: 2px;
+  animation: progress-fill 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
