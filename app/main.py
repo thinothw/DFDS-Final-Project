@@ -40,6 +40,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def _save_upload(upload: UploadFile, allowed_ext: set[str]) -> Path:
     suffix = Path(upload.filename or "").suffix.lower()
@@ -91,7 +100,7 @@ async def predict_image(file: UploadFile = File(...)):
         result = detect_and_crop_face(image_bgr)
         if result is None:
             raise HTTPException(
-                status_code=422,
+                status_code=400,
                 detail="No face detected in the image. Ensure the image contains a clear, forward-facing face.",
             )
         pil_face, _face_conf = result
@@ -162,21 +171,31 @@ async def predict_video(file: UploadFile = File(...)):
         face_confs = np.array([f["face_detection_conf"] for f in per_frame], dtype=np.float64)
 
         # Weighted average fake probability (weight = face detection confidence)
-        weighted_avg = float(np.average(fake_probs, weights=face_confs))
+        weight_sum = float(face_confs.sum())
+        weighted_avg = (
+            float(np.average(fake_probs, weights=face_confs))
+            if weight_sum > 0
+            else float(np.mean(fake_probs))
+        )
         variance = float(np.std(fake_probs))
 
-        # Grad-CAM on the frame whose fake_prob is closest to the weighted mean
-        closest_idx = int(np.argmin(np.abs(fake_probs - weighted_avg)))
-        _frame_idx_for_cam, best_tensor = face_tensors[closest_idx]
-        gradcam_b64 = generate_gradcam_b64(
-            model,
-            device,
-            best_tensor,
-            class_idx=0 if weighted_avg >= FAKE_THRESHOLD else 1,
-        )
+        # Top 3 frames closest to weighted mean (most representative)
+        distances = np.abs(fake_probs - weighted_avg)
+        top3_indices = np.argsort(distances)[:3]
+        class_idx = 0 if weighted_avg >= FAKE_THRESHOLD else 1
+
+        gradcam_heatmaps: list[str] = []
+        for idx in top3_indices:
+            _, tensor_for_cam = face_tensors[idx]
+            gradcam_heatmaps.append(
+                generate_gradcam_b64(model, device, tensor_for_cam, class_idx=class_idx)
+            )
+
+        gradcam_b64 = gradcam_heatmaps[0]  # best single frame for backwards compat
 
         label = "Fake" if weighted_avg >= FAKE_THRESHOLD else "Real"
 
+        # confidence = weighted average fake probability (float 0–1, weight = face detection conf)
         response: dict = {
             "prediction": label,
             "confidence": round(weighted_avg, 6),
@@ -184,6 +203,7 @@ async def predict_video(file: UploadFile = File(...)):
             "frames_analyzed": len(per_frame),
             "per_frame_results": per_frame,
             "gradcam_heatmap": gradcam_b64,
+            "gradcam_heatmaps": gradcam_heatmaps,
         }
         if variance > VIDEO_STD_FLAG:
             response["risk_flag"] = "high_variance"
