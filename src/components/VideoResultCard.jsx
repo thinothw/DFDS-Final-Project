@@ -1,5 +1,6 @@
 import GlassCard from './GlassCard';
 import { VerdictChip, ConfidenceBar } from './ImageResultCard';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 /* ─── Chip presets ───────────────────────────────────────────── */
 const CHIP_FAKE = {
@@ -12,13 +13,14 @@ const CHIP_REAL = {
 };
 
 /* ─── Single frame chip ──────────────────────────────────────── */
-function FrameChip({ frameIndex, fakeProb }) {
+function FrameChip({ frameIndex, fakeProb, isMobile }) {
   const fake         = fakeProb > 0.5;
   const verdictColor = fake ? '#F09595' : '#5DCAA5';
 
   return (
     <div style={{
-      flex: 1,
+      flex: isMobile ? '0 0 auto' : 1,
+      minWidth: isMobile ? 36 : 0,
       padding: '6px 2px',
       borderRadius: 4,
       background: fake ? 'rgba(120,30,30,0.18)' : 'rgba(15,80,65,0.13)',
@@ -27,7 +29,6 @@ function FrameChip({ frameIndex, fakeProb }) {
       flexDirection: 'column',
       alignItems: 'center',
       gap: 3,
-      minWidth: 0,
     }}>
       <span style={{ fontSize: 8, color: '#4A5C6A', lineHeight: 1 }}>
         F{frameIndex + 1}
@@ -41,6 +42,8 @@ function FrameChip({ frameIndex, fakeProb }) {
 
 /* ─── VideoResultCard ────────────────────────────────────────── */
 export default function VideoResultCard({ videoResult }) {
+  const { isMobile } = useWindowSize();
+
   const isFake       = videoResult.prediction === 'Fake';
   const displayPct   = isFake
     ? (videoResult.confidence * 100).toFixed(2)
@@ -93,13 +96,14 @@ export default function VideoResultCard({ videoResult }) {
         fillPct={`${displayPct}%`}
       />
 
-      {/* Frame chips row */}
-      <div style={{ display: 'flex', gap: 4, marginTop: 14 }}>
+      {/* Frame chips — wrap on mobile */}
+      <div style={{ display: 'flex', gap: 4, marginTop: 14, flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
         {videoResult.per_frame_results.map(f => (
           <FrameChip
             key={f.frame_index}
             frameIndex={f.frame_index}
             fakeProb={f.fake_prob}
+            isMobile={isMobile}
           />
         ))}
       </div>

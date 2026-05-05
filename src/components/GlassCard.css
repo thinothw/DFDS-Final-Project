@@ -38,6 +38,12 @@
   pointer-events: none;
 }
 
+@media (max-width: 767px) {
+  .glass-card {
+    padding: 14px 16px;
+  }
+}
+
 /* Soft ambient glow in the top-left quadrant */
 .glass-card::after {
   content: '';

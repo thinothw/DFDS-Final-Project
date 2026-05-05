@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect, Suspense } from 'react';
 import axios from 'axios';
 import './index.css';
-import UploadPanel  from './components/UploadPanel';
-import ResultsRow   from './components/ResultsRow';
-import GradCamPanel from './components/GradCamPanel';
-import GlassCard    from './components/GlassCard';
+import UploadPanel from './components/UploadPanel';
+import GlassCard   from './components/GlassCard';
+import { useWindowSize } from './hooks/useWindowSize';
+
+const ResultsRow   = React.lazy(() => import('./components/ResultsRow'));
+const GradCamPanel = React.lazy(() => import('./components/GradCamPanel'));
 
 const API_BASE = 'http://127.0.0.1:8000';
 
@@ -54,7 +56,7 @@ const PIPELINE_STEPS = [
 const THREAT_STATS = [
   { number: '1 in 20', desc: 'identity verification attempts now linked to deepfake attacks in 2025, up 21% year-over-year' },
   { number: '$40B',    desc: 'projected US fraud losses by 2027 driven by generative AI, up from $12.3B in 2023' },
-  { number: '244%',   desc: 'increase in digital document forgeries year-over-year, with a deepfake attempt every 5 minutes' },
+  { number: '244%',    desc: 'increase in digital document forgeries year-over-year, with a deepfake attempt every 5 minutes' },
 ];
 
 const ADOPTION_DATA = [
@@ -67,6 +69,8 @@ const ADOPTION_DATA = [
 ];
 
 function EmptyState() {
+  const { isMobile } = useWindowSize();
+
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
@@ -74,23 +78,24 @@ function EmptyState() {
       paddingTop: 48, paddingBottom: 48, gap: 20,
       width: '100%',
     }}>
-      <div style={{ fontSize: 12, color: '#253745', letterSpacing: '0.08em', textAlign: 'center', alignSelf: 'center' }}>
+      <div style={{ fontSize: isMobile ? 11 : 12, color: '#253745', letterSpacing: '0.08em', textAlign: 'center', alignSelf: 'center' }}>
         Upload an image or video above to begin analysis
       </div>
 
-      <div style={{ display: 'flex', gap: 12, alignSelf: 'center' }}>
+      {/* Stat pills — wrap on mobile */}
+      <div style={{ display: 'flex', gap: 12, alignSelf: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
         {STAT_PILLS.map(([label, value]) => (
           <GlassCard key={label} style={{ padding: '10px 18px', borderRadius: 8 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <span style={{ fontSize: 8, color: '#4A5C6A', letterSpacing: '0.1em' }}>{label}</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: '#9BA8AB' }}>{value}</span>
+              <span style={{ fontSize: isMobile ? 11 : 13, fontWeight: 500, color: '#9BA8AB' }}>{value}</span>
             </div>
           </GlassCard>
         ))}
       </div>
 
       {/* 1 — Pipeline */}
-      <GlassCard style={{ width: '100%', padding: '20px 28px' }}>
+      <GlassCard style={{ width: '100%', padding: isMobile ? '14px 16px' : '20px 28px' }}>
         <div style={{ fontSize: 9, color: '#4A5C6A', letterSpacing: '0.12em', marginBottom: 14 }}>
           PIPELINE
         </div>
@@ -108,7 +113,7 @@ function EmptyState() {
                 }}>
                   {i + 1}
                 </div>
-                <span style={{ fontSize: 12, color: '#9BA8AB', fontWeight: 400, marginLeft: 12 }}>
+                <span style={{ fontSize: isMobile ? 11 : 12, color: '#9BA8AB', fontWeight: 400, marginLeft: 12 }}>
                   {text}
                 </span>
               </div>
@@ -125,11 +130,11 @@ function EmptyState() {
       </GlassCard>
 
       {/* 2 — Market Context */}
-      <GlassCard style={{ width: '100%', padding: '20px 28px' }}>
+      <GlassCard style={{ width: '100%', padding: isMobile ? '14px 16px' : '20px 28px' }}>
         <div style={{ fontSize: 9, color: '#4A5C6A', letterSpacing: '0.12em', marginBottom: 12 }}>
           MARKET CONTEXT
         </div>
-        <p style={{ fontSize: 13, color: '#9BA8AB', lineHeight: 1.7, fontWeight: 300, margin: 0 }}>
+        <p style={{ fontSize: isMobile ? 11 : 13, color: '#9BA8AB', lineHeight: 1.7, fontWeight: 300, margin: 0 }}>
           In 2024, 49% of organisations experienced deepfake attacks - up from 29% in 2022 - with a deepfake attempt recorded every five minutes globally. New account fraud losses reached $6.2 billion in the US in 2024. The KYC verification market is projected to grow 140% over five years from a $9.2 billion baseline, driven by the need to counter AI-generated fraud in digital onboarding.
         </p>
         <div style={{ fontSize: 9, color: '#4A5C6A', marginTop: 10 }}>
@@ -140,18 +145,18 @@ function EmptyState() {
         </div>
       </GlassCard>
 
-      {/* 3 — Threat + Adoption */}
-      <div style={{ display: 'flex', gap: 14, width: '100%' }}>
+      {/* 3 — Threat + Adoption — single column on mobile */}
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 14, width: '100%' }}>
         {/* Left — 2025 Threat Data */}
-        <GlassCard style={{ flex: 1, padding: '20px 28px' }}>
+        <GlassCard style={{ flex: 1, padding: isMobile ? '14px 16px' : '20px 28px' }}>
           <div style={{ fontSize: 9, color: '#4A5C6A', letterSpacing: '0.12em', marginBottom: 14 }}>
             2025 THREAT DATA
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {THREAT_STATS.map(({ number, desc }) => (
               <div key={number}>
-                <div style={{ fontSize: 22, fontWeight: 600, color: '#9BA8AB' }}>{number}</div>
-                <div style={{ fontSize: 10, color: '#4A5C6A', lineHeight: 1.5 }}>{desc}</div>
+                <div style={{ fontSize: isMobile ? 18 : 22, fontWeight: 600, color: '#9BA8AB' }}>{number}</div>
+                <div style={{ fontSize: isMobile ? 9 : 10, color: '#4A5C6A', lineHeight: 1.5 }}>{desc}</div>
               </div>
             ))}
           </div>
@@ -161,7 +166,7 @@ function EmptyState() {
         </GlassCard>
 
         {/* Right — Adoption Curve */}
-        <GlassCard style={{ flex: 1, padding: '20px 28px' }}>
+        <GlassCard style={{ flex: 1, padding: isMobile ? '14px 16px' : '20px 28px' }}>
           <div style={{ fontSize: 9, color: '#4A5C6A', letterSpacing: '0.12em', marginBottom: 14 }}>
             ADOPTION CURVE
           </div>
@@ -176,15 +181,13 @@ function EmptyState() {
               return (
                 <g key={year}>
                   {projected ? (
-                    <>
-                      <rect
-                        x={x} y={y} width={barW} height={barH}
-                        fill="rgba(74,92,106,0.25)"
-                        stroke="rgba(74,92,106,0.5)"
-                        strokeWidth="0.5"
-                        strokeDasharray="3 2"
-                      />
-                    </>
+                    <rect
+                      x={x} y={y} width={barW} height={barH}
+                      fill="rgba(74,92,106,0.25)"
+                      stroke="rgba(74,92,106,0.5)"
+                      strokeWidth="0.5"
+                      strokeDasharray="3 2"
+                    />
                   ) : (
                     <rect
                       x={x} y={y} width={barW} height={barH}
@@ -215,11 +218,15 @@ function EmptyState() {
 
 /* ─── Navbar ─────────────────────────────────────────────────── */
 function Navbar() {
+  const { isMobile } = useWindowSize();
+
   return (
     <nav style={{
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: isMobile ? 'flex-start' : 'space-between',
+      alignItems: isMobile ? 'flex-start' : 'center',
+      gap: isMobile ? 8 : 0,
       padding: '14px 0 13px',
       borderBottom: '0.5px solid rgba(255,255,255,0.05)',
       marginBottom: 13,
@@ -240,13 +247,13 @@ function Navbar() {
 
       {/* Right — system badge */}
       <span style={{
-        fontSize: 11,
+        fontSize: isMobile ? 9 : 11,
         color: '#4A5C6A',
         background: 'rgba(37,55,69,0.5)',
         border: '0.5px solid rgba(74,92,106,0.2)',
         borderRadius: 4,
-        padding: '3px 9px',
-        letterSpacing: '0.1em',
+        padding: isMobile ? '3px 7px' : '3px 9px',
+        letterSpacing: '0.08em',
       }}>
         KYC · DEEPFAKE DETECTION SYSTEM
       </span>
@@ -256,6 +263,8 @@ function Navbar() {
 
 /* ─── App ────────────────────────────────────────────────────── */
 export default function App() {
+  const { isMobile } = useWindowSize();
+
   const [imageFile,    setImageFile]    = useState(null);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageResult,  setImageResult]  = useState(null);
@@ -265,6 +274,8 @@ export default function App() {
   const [videoLoading, setVideoLoading] = useState(false);
   const [videoResult,  setVideoResult]  = useState(null);
   const [videoError,   setVideoError]   = useState(null);
+
+  const resultsRef = useRef(null);
 
   /* Image file selected */
   function handleFileSelect(file) {
@@ -295,7 +306,7 @@ export default function App() {
   }
 
   /* POST /predict/image */
-  async function handleAnalyse() {
+  const handleAnalyse = useCallback(async () => {
     if (!imageFile || imageLoading) return;
 
     setImageLoading(true);
@@ -334,10 +345,10 @@ export default function App() {
     } finally {
       setImageLoading(false);
     }
-  }
+  }, [imageFile, imageLoading]);
 
   /* POST /predict/video */
-  async function handleVideoAnalyse() {
+  const handleVideoAnalyse = useCallback(async () => {
     if (!videoFile || videoLoading) return;
 
     setVideoLoading(true);
@@ -374,7 +385,7 @@ export default function App() {
     } finally {
       setVideoLoading(false);
     }
-  }
+  }, [videoFile, videoLoading]);
 
   /* Reset everything back to idle */
   function handleReset() {
@@ -384,12 +395,22 @@ export default function App() {
 
   const anyResult = imageResult || videoResult;
 
+  /* Scroll results into view on mobile when results first appear */
+  useEffect(() => {
+    if (anyResult && isMobile && resultsRef.current) {
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [anyResult, isMobile]);
+
   return (
     <div style={{
       minHeight: '100vh',
       background: '#06141B',
       fontFamily: "'Inter', sans-serif",
-      padding: 24,
+      padding: isMobile ? 12 : 24,
     }}>
       <Navbar />
 
@@ -410,18 +431,26 @@ export default function App() {
         {!anyResult && <EmptyState />}
 
         {anyResult && (
-          <ResultsRow
-            imageResult={imageResult}
-            videoResult={videoResult}
-          />
+          <div ref={resultsRef} className="fade-in">
+            <Suspense fallback={<div />}>
+              <ResultsRow
+                imageResult={imageResult}
+                videoResult={videoResult}
+              />
+            </Suspense>
+          </div>
         )}
 
         {anyResult && (
-          <GradCamPanel
-            imageResult={imageResult}
-            videoResult={videoResult}
-            onReset={handleReset}
-          />
+          <div className="fade-in">
+            <Suspense fallback={<div />}>
+              <GradCamPanel
+                imageResult={imageResult}
+                videoResult={videoResult}
+                onReset={handleReset}
+              />
+            </Suspense>
+          </div>
         )}
       </div>
     </div>

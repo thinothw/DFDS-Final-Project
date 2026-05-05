@@ -1,4 +1,5 @@
 import GlassCard from './GlassCard';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 /* ─── Single heatmap tile ────────────────────────────────────── */
 function HeatmapTile({ label, desc, barPct, barColor, badge, imageSrc, square, simple }) {
@@ -15,6 +16,7 @@ function HeatmapTile({ label, desc, barPct, barColor, badge, imageSrc, square, s
           <img
             src={imageSrc}
             alt={label}
+            loading="lazy"
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         )}
@@ -48,9 +50,10 @@ function HeatmapTile({ label, desc, barPct, barColor, badge, imageSrc, square, s
   );
 }
 
-
 /* ─── GradCamPanel (Panel 3) ─────────────────────────────────── */
 export default function GradCamPanel({ imageResult, videoResult, onReset }) {
+  const { isMobile } = useWindowSize();
+
   const isVideoResult = !!videoResult && !imageResult;
   const result        = imageResult || videoResult;
 
@@ -85,22 +88,25 @@ export default function GradCamPanel({ imageResult, videoResult, onReset }) {
   return (
     <GlassCard>
       {/* Panel header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-        <span style={{ fontSize: 11, fontWeight: 500, color: '#4A5C6A', letterSpacing: '0.12em' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 500, color: '#4A5C6A', letterSpacing: '0.12em', flexShrink: 0 }}>
           GRAD-CAM · ACTIVATION HEATMAPS
         </span>
-        <span style={{
-          fontSize: 11, color: '#4A5C6A',
-          border: '0.5px solid rgba(74,92,106,0.35)',
-          borderRadius: 3, padding: '2px 7px', letterSpacing: '0.06em',
-        }}>
-          MOST REPRESENTATIVE FRAMES PER DETECTION
-        </span>
+        {!isMobile && (
+          <span style={{
+            fontSize: 11, color: '#4A5C6A',
+            border: '0.5px solid rgba(74,92,106,0.35)',
+            borderRadius: 3, padding: '2px 7px', letterSpacing: '0.06em',
+            whiteSpace: 'nowrap',
+          }}>
+            MOST REPRESENTATIVE FRAMES PER DETECTION
+          </span>
+        )}
       </div>
 
-      {/* Heatmap display */}
+      {/* Heatmap display — 3 columns on desktop, 1 column on mobile */}
       {isVideoResult && videoResult.gradcam_heatmaps?.length === 3 ? (
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 12 }}>
           {videoResult.gradcam_heatmaps.map((heatmap, i) => (
             <div key={i} style={{ flex: 1, minWidth: 0 }}>
               <HeatmapTile
@@ -115,7 +121,7 @@ export default function GradCamPanel({ imageResult, videoResult, onReset }) {
         </div>
       ) : (
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '50%' }}>
+          <div style={{ width: isMobile ? '100%' : '50%' }}>
             <HeatmapTile {...tile} square />
           </div>
         </div>
