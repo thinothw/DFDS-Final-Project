@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import GlassCard from './GlassCard';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 /* ─── Helpers ────────────────────────────────────────────────── */
 function formatSize(bytes) {
@@ -22,12 +23,13 @@ function UploadIcon({ dragging }) {
 }
 
 /* ─── Dashed drop zone (click + drag) ───────────────────────── */
-function DropZone({ onBrowse, dragging, onDragOver, onDragLeave, onDrop }) {
+function DropZone({ onBrowse, dragging, onDragEnter, onDragOver, onDragLeave, onDrop }) {
   const borderColor = dragging ? 'rgba(156,186,171,0.5)' : 'rgba(74,92,106,0.38)';
   const bgColor     = dragging ? 'rgba(37,55,69,0.15)'   : 'transparent';
 
   return (
     <div
+      onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -73,6 +75,15 @@ function DropZone({ onBrowse, dragging, onDragOver, onDragLeave, onDrop }) {
           border: '0.5px solid rgba(74,92,106,0.25)',
           borderRadius: 5, padding: '4px 12px',
           cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.06em',
+          transition: 'background 0.15s, border-color 0.15s',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background  = 'rgba(37,55,69,0.65)';
+          e.currentTarget.style.borderColor = 'rgba(74,92,106,0.45)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background  = 'rgba(37,55,69,0.4)';
+          e.currentTarget.style.borderColor = 'rgba(74,92,106,0.25)';
         }}
       >
         Browse
@@ -82,7 +93,7 @@ function DropZone({ onBrowse, dragging, onDragOver, onDragLeave, onDrop }) {
 }
 
 /* ─── Right column — conditional status states ───────────────── */
-function StatusColumn({ file, loading, error, onAnalyse, isVideo }) {
+function StatusColumn({ file, loading, error, onAnalyse, isVideo, isMobile }) {
   /* Loading state */
   if (loading) {
     return (
@@ -96,7 +107,6 @@ function StatusColumn({ file, loading, error, onAnalyse, isVideo }) {
                 : 'Analysing image… this may take 2–4 seconds'}
             </span>
           </div>
-          {/* Progress bar — mounts fresh each load, animation restarts automatically */}
           <div style={{
             marginTop: 7, height: 2, borderRadius: 2,
             background: 'rgba(74,92,106,0.12)', overflow: 'hidden',
@@ -108,7 +118,7 @@ function StatusColumn({ file, loading, error, onAnalyse, isVideo }) {
     );
   }
 
-  /* Error state (API or validation error) */
+  /* Error state */
   if (error) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 9, height: '100%' }}>
@@ -124,7 +134,7 @@ function StatusColumn({ file, loading, error, onAnalyse, isVideo }) {
     );
   }
 
-  /* File selected and valid — show ready box + Analyse button */
+  /* File selected — show ready box + Analyse button */
   if (file) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 9, height: '100%' }}>
@@ -137,7 +147,6 @@ function StatusColumn({ file, loading, error, onAnalyse, isVideo }) {
           {file.name} · {formatSize(file.size)} · ready to analyse
         </div>
 
-        {/* Analyse CTA */}
         <button
           onClick={onAnalyse}
           style={{
@@ -151,12 +160,12 @@ function StatusColumn({ file, loading, error, onAnalyse, isVideo }) {
             transition: 'background 0.15s, border-color 0.15s',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background    = 'rgba(37,55,69,0.85)';
-            e.currentTarget.style.borderColor   = 'rgba(74,92,106,0.65)';
+            e.currentTarget.style.background  = 'rgba(37,55,69,0.85)';
+            e.currentTarget.style.borderColor = 'rgba(74,92,106,0.65)';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background    = 'rgba(37,55,69,0.6)';
-            e.currentTarget.style.borderColor   = 'rgba(74,92,106,0.4)';
+            e.currentTarget.style.background  = 'rgba(37,55,69,0.6)';
+            e.currentTarget.style.borderColor = 'rgba(74,92,106,0.4)';
           }}
         >
           Analyse →
@@ -165,16 +174,31 @@ function StatusColumn({ file, loading, error, onAnalyse, isVideo }) {
     );
   }
 
-  /* Idle — no file selected yet */
+  /* Idle — no file selected yet; show disabled Analyse button for affordance */
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
       justifyContent: 'center', alignItems: 'center',
-      height: '100%', gap: 6,
+      height: '100%', gap: 9,
     }}>
       <span style={{ fontSize: 12, color: '#253745', textAlign: 'center', lineHeight: 1.6 }}>
         Select or drop a file to begin analysis
       </span>
+      <button
+        disabled
+        style={{
+          width: '100%',
+          fontSize: 14, fontWeight: 500,
+          color: '#9BA8AB',
+          background: 'rgba(37,55,69,0.6)',
+          border: '0.5px solid rgba(74,92,106,0.4)',
+          borderRadius: 7, padding: '9px 0',
+          cursor: 'not-allowed', fontFamily: 'inherit', letterSpacing: '0.08em',
+          opacity: 0.4,
+        }}
+      >
+        Analyse →
+      </button>
     </div>
   );
 }
@@ -184,14 +208,16 @@ export default function UploadPanel({
   imageFile, imageLoading, imageError, onFileSelect, onAnalyse,
   videoFile, videoLoading, videoError, onVideoFileSelect, onVideoAnalyse,
 }) {
+  const { isMobile } = useWindowSize();
   const fileInputRef = useRef(null);
   const [dragging,   setDragging]   = useState(false);
   const [localError, setLocalError] = useState(null);
 
-  /* Clear local error when App resets all external state */
+  /* Clear local error and file input DOM when App resets all external state */
   useEffect(() => {
     if (!imageFile && !imageError && !videoFile && !videoError) {
       setLocalError(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }, [imageFile, imageError, videoFile, videoError]);
 
@@ -207,15 +233,23 @@ export default function UploadPanel({
     }
   }
 
+  function handleDragEnter(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
   function handleDragOver(e) {
     e.preventDefault();
+    e.stopPropagation();
     setDragging(true);
   }
   function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
     if (!e.currentTarget.contains(e.relatedTarget)) setDragging(false);
   }
   function handleDrop(e) {
     e.preventDefault();
+    e.stopPropagation();
     setDragging(false);
     handleFile(e.dataTransfer.files[0]);
   }
@@ -228,7 +262,6 @@ export default function UploadPanel({
 
   return (
     <GlassCard>
-      {/* Section label */}
       <div style={{ fontSize: 11, fontWeight: 500, color: '#4A5C6A', letterSpacing: '0.12em', marginBottom: 16 }}>
         UPLOAD
       </div>
@@ -242,29 +275,37 @@ export default function UploadPanel({
         onChange={e => { handleFile(e.target.files[0]); e.target.value = ''; }}
       />
 
-      {/* Three-column grid: content | divider | content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 0.5px 1.2fr', columnGap: 24 }}>
-        {/* Left column — drop zone */}
-        <div>
-          <DropZone
-            dragging={dragging}
-            onBrowse={() => fileInputRef.current.click()}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          />
-        </div>
+      {/* 3-column grid on desktop, stacked on mobile */}
+      <div style={isMobile ? {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16,
+      } : {
+        display: 'grid',
+        gridTemplateColumns: '1fr 0.5px 1.2fr',
+        columnGap: 24,
+      }}>
+        {/* Left — drop zone */}
+        <DropZone
+          dragging={dragging}
+          onBrowse={() => fileInputRef.current.click()}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        />
 
-        {/* Middle divider */}
-        <div style={{ background: 'rgba(255,255,255,0.04)' }} />
+        {/* Middle divider — hidden on mobile */}
+        {!isMobile && <div style={{ background: 'rgba(255,255,255,0.04)' }} />}
 
-        {/* Right column — conditional status */}
+        {/* Right — conditional status */}
         <StatusColumn
           file={currentFile}
           loading={currentLoading}
           error={currentError}
           onAnalyse={currentAnalyse}
           isVideo={isVideoMode}
+          isMobile={isMobile}
         />
       </div>
     </GlassCard>
