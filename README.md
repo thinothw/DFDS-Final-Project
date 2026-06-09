@@ -1,4 +1,4 @@
-# DFDS — Deepfake Detection System
+# DFDS - Deepfake Detection System
 
 **Deepfake Detection for FinTech Identity Verification: A Transfer Learning Approach with Spatial Interpretability**
 
