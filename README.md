@@ -2,7 +2,7 @@
 
 **Deepfake Detection for FinTech Identity Verification: A Transfer Learning Approach with Spatial Interpretability**
 
-An open-source deepfake detection API built for FinTech KYC (Know Your Customer) identity verification workflows. The system is powered by an EfficientNet-B2 model trained via two-phase transfer learning on 162,000+ face images. It is deployed through a FastAPI backend with Grad-CAM spatial interpretability embedded directly into every inference request.
+An open-source deepfake detection API built for FinTech KYC (Know Your Customer) identity verification workflows. The system is powered by an EfficientNet-B2 model trained via two-phase transfer learning on 142,000+ face images. It is deployed through a FastAPI backend with Grad-CAM spatial interpretability embedded directly into every inference request.
 
 ---
 
