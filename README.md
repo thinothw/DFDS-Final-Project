@@ -8,7 +8,7 @@ An open-source deepfake detection API built for FinTech KYC (Know Your Customer)
 
 ## Dataset Availability
 
-The full, preprocessed dataset used for training and evaluating this system is publicly hosted on Hugging Face. It contains over 162,000 face images curated and structured for deepfake detection benchmarks.
+The full, preprocessed dataset used for training and evaluating this system is publicly hosted on Hugging Face. It contains over 142,000 face images curated and structured for deepfake detection benchmarks.
 
 * **Repository:** [Deepfake-Identity-Isolated-Dataset-PreP](https://huggingface.co/datasets/ThinothW/Deepfake-Identity-Isolated-Dataset-PreP)
 * **Profile:** [Hugging Face - ThinothW](https://huggingface.co/ThinothW)
