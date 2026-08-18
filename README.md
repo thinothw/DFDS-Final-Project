@@ -86,7 +86,7 @@ Evaluation of the model's performance on unseen methods, grouped by manipulation
 ## Installation & Setup.
 
 ### 1. Clone the repository.
-git clone https://github.com/thinothw/DFDS-Final-Project.git
+git clone https://github.com/thinothw/DFDS-Final-Project.git](https://github.com/thinothw/DFDS-XAI.git
 
 ### 2. Backend Setup.
 cd ~/deepfake-api-backend
